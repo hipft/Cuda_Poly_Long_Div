@@ -23,21 +23,18 @@
 #include <cuda.h>
 
 __device__ __host__
-int remainder_is_nonzero(const int& da, uint32_t* A, const int& db, const uint64_t& B)
+int remainder_is_nonzero(const int& da, bool* A, const int& db, const uint64_t& B)
 // returns true if the remainder of A after division by B is nonzero
 {
 	for (int i = da + db; i >= db; i--) {
-		if (A[i/32] & (1 << (i&31))) {
+		if (A[i]) {
 			for (int j = db, k = i; j >= 0; j--, k--) {
-				const uint32_t& b = uint32_t((B >> (db-j)) & 1);
-				const uint32_t& a = (A[k/32] >> (k&31)) & 1;
-				A[k/32] &= ~(1 << (k & 31));
-				A[k/32] |= (a ^ b) << (k & 31);
+				A[k] = (A[k] + ((B >> (db-j))&1)) & 1;
 			}
 		}
 	}
 	for (int k = da + db; k >= 0; k--) {
-		if (A[k/32] & (1 << (k & 31))) {
+		if (A[k]) {
 			return true;
 		}
 	}
@@ -49,32 +46,32 @@ __device__ __host__
 bool test_all_two_bit_patterns(const uint64_t& C)
 // returns true if division by C leaves a nonzero remainder for all two bit error patters
 {
-	constexpr int size = da + dc + 1;
-	uint32_t B[size/32+1];
-	uint32_t A[size/32+1];
+	bool B[da + dc + 1];
+	bool A[da + 1 + dc];
 
-	memset(A, 0, 4 * (size/32+1));
-	memset(B, 0, 4 * (size/32+1));
+	memset(A, 0, da + dc + 1);
+	memset(B, 0, da + dc + 1);
 
 	for (int i = 0; i <= da; i++) {
-		A[i/32] |= 1u << (i&31);
-		for (int j = i + 1; j <= da; j++) {
-			A[j/32] |= 1u << (j&31);
-			for (int k = 0; k <= da; k++) {
-//				B[dc + k] = A[k];
-				B[(dc+k)/32] &= ~(1u << ((dc+k) & 31));
-				B[(dc+k)/32] |= ((A[k/32] >> (k&31)) & 1) << ((dc+k) & 31);
+		for (int ai = 1; ai < 2; ai++) {
+			A[i] = ai;
+			for (int j = i + 1; j <= da; j++) {
+				for (int aj = 1; aj < 2; aj++) {
+					A[j] = aj;
+					for (int k = 0; k <= da; k++) {
+						B[dc + k] = A[k];
+					}
+					for (int k = 0; k < dc; k++) {
+						B[k] = 0;
+					}
+					if (!remainder_is_nonzero (da, B, dc, C)) {
+						return false;
+					}
+				}
+				A[j] = 0;
 			}
-			for (int k = 0; k < dc; k++) {
-//				B[k] = 0;
-				B[k/32] &= ~(1 << (k&31));
-			}
-			if (!remainder_is_nonzero (da, B, dc, C)) {
-				return false;
-			}
-			A[j/32] &= ~(1 << (j&31));
 		}
-		A[i/32] &= ~(1 << (i&31));
+		A[i] = 0;
 	}
 	return true;
 }
@@ -84,42 +81,38 @@ __device__ __host__
 bool test_all_three_bit_patterns(const uint64_t& C)
 // returns true if division by C leaves a nonzero remainder for all two bit error patters
 {
-	constexpr int size = da + dc + 1;
-	uint32_t B[size/32+1];
-	uint32_t A[size/32+1];
+	bool B[da + dc + 1];
+	bool A[da + 1 + dc];
 
-	memset(A, 0, 4 * (size/32+1));
-	memset(B, 0, 4 * (size/32+1));
+	memset(A, 0, da + dc + 1);
+	memset(B, 0, da + dc + 1);
 
 	for (int i1 = 0; i1 <= da; i1++) {
 		for (int a1 = 1; a1 < 2; a1++) {
-			A[i1/32] |= 1u << (i1 & 31);
+			A[i1] = a1;
 			for (int i2 = i1 + 1; i2 <= da; i2++) {
 				for (int a2 = 1; a2 < 2; a2++) {
-					A[i2/32] |= 1u << (i2 & 31);
+					A[i2] = a2;
 					for (int i3 = i2 + 1; i3 <= da; i3++) {
 						for (int a3 = 1; a3 < 2; a3++) {
-							A[i3/32] |= 1u << (i3 & 31);
+							A[i3] = a3;
 							for (int h = 0; h <= da; h++) {
-								// B[dc + h] = A[h];
-								B[(dc+h)/32] &= ~(1u << ((dc+h) & 31));
-								B[(dc+h)/32] |= ((A[h/32] >> (h & 31)) & 1) << ((dc+h) & 31);
+								B[dc + h] = A[h];
 							}
 							for (int h = 0; h < dc; h++) {
-								// B[h] = 0;
-								B[h/32] &= ~(1 << (h & 31));
+								B[h] = 0;
 							}
 							if (!remainder_is_nonzero (da, B, dc, C)) {
 								return false;
 							}
 						}
-						A[i3/32] &= ~(1u << (i3 & 31));
+						A[i3] = 0;
 					}
 				}
-				A[i2/32] &= ~(1u << (i2 & 31));
+				A[i2] = 0;
 			}
 		}
-		A[i1/32] &= ~(1u << (i1 & 31));
+		A[i1] = 0;
 	}
 	return true;
 }

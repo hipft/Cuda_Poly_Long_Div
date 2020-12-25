@@ -34,7 +34,7 @@ public:
 	int block_dim, id, num_sol{0};
 };
 
-template<int da, int dc>
+template<int t, int da, int dc>
 void CRC_polynomial_cuda_t2_wrapper(params& p, FileWriter& fw, const int& n) {
 	uint64_t grid_dim = (p.end-p.start)/p.block_dim + 1;
 	grid_dim = min(grid_dim, (uint64_t(1)<<31)-1);
@@ -64,17 +64,16 @@ void CRC_polynomial_cuda_t2_wrapper(params& p, FileWriter& fw, const int& n) {
 
 int main() {
 	uint64_t ns{0};
-	constexpr int da{64};
-	constexpr int dc{8};
-
-	assert(dc < 64);
+	constexpr int da{128};
+	constexpr int dc{16};
 
 	// for t == 2
-#if 1
+#if 0
 	cout << "Running t=2" << endl;
 	constexpr int blockDim{1<<5}; // threads per block
 
-	FileWriter fw("output_cuda_t2");
+	assert(dc < 64);
+	FileWriter fw("output_cuda");
 	size_t n = std::thread::hardware_concurrency();
 	thread threads[n];
 	params p[n];
@@ -94,7 +93,7 @@ int main() {
 #else
 	// for t == 3
 	cout << "Running t=3" << endl;
-	std::ifstream f ("output_cuda_t2");
+	std::ifstream f ("output_cuda");
 	vector<uint64_t> S;
 	string line;
 	while (std::getline(f, line)) {
@@ -103,8 +102,6 @@ int main() {
 	  while (iss >> v) S.push_back(v);
 	}
 	f.close();
-	cout << S.back() << endl;
-	cout << "number of t2 solutions: " << S.size() << endl;
 
 	// copy to GPU
 	uint64_t* data;
@@ -117,10 +114,10 @@ int main() {
 
 	// compute
 	CRC_polynomial_cuda_t3<da,dc><<<S.size()/32+1, 32>>>(data, d_res, S.size());
-	bool* h_res = new bool[sizeof(bool)*S.size()]();
+	cudaDeviceSynchronize();
 
 	// copy result
-	cudaDeviceSynchronize();
+	bool* h_res = new bool[sizeof(bool)*S.size()]();
 	cudaMemcpy(h_res, d_res, sizeof(bool)*S.size(), cudaMemcpyDeviceToHost);
 
 	vector<uint64_t> final_result;

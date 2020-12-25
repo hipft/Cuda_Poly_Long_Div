@@ -31,9 +31,9 @@ void search_for_CRC_polynomial_cpu(params& p, FileWriter& fw) {
 int main() {
 	int num_sol{0};
 
-	constexpr int t{3};
-	constexpr int da{64};
-	constexpr int dc{8};
+	constexpr int t{2};
+	constexpr int da{128};
+	constexpr int dc{16};
 
 	FileWriter fw("output_cpu");
 

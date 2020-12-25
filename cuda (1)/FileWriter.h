@@ -20,56 +20,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "FileWriter.h"
+#include <iostream>
+#include <vector>
+#include <deque>
+#include <fstream>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <algorithm>
+#include <atomic>
+#include <condition_variable>
 
-FileWriter::FileWriter(const string& filename) {
-	_file_.open(filename, std::ofstream::out | std::ofstream::app);
-	kill.store(false);
-	terminated.store(false);
-	t = thread(&FileWriter::write_data, this);
-	t.detach();
-}
+using std::vector;
+using std::ofstream;
+using std::string;
+using std::thread;
+using std::mutex;
+using std::deque;
+using std::move;
+using std::atomic;
+using std::for_each;
+using std::condition_variable;
+using std::cout;
+using std::endl;
 
-FileWriter::~FileWriter() {
-	kill.store(true);
-	cv.notify_all();
-	{
-		std::lock_guard<mutex> lock(m);
-		while (!data.empty()) {
-			for_each(data.front().begin(), data.front().end(), [&](const int& i){
-				_file_ << i << " ";
-			});
-			data.pop_front();
-		}
-	}
-	_file_.close();
-}
+#ifndef FILEWRITER_H_
+#define FILEWRITER_H_
 
-void FileWriter::write_data() {
-	std::unique_lock<mutex> lock(m);
-	vector<uint64_t> v;
-	while (!kill.load()) {
-		cv.wait(lock, [&]{
-			if (!data.empty()) {
-				v = move(data.front());
-				data.pop_front();
-				return true; // release lock and exit cv pred. block
-			}
-			return kill.load();
-		});
-		for_each(v.begin(), v.end(), [&](const int& i){
-			_file_ << i << " ";
-		});
-		_file_.flush();
-		v.clear();
-	}
-	terminated.store(true);
-}
+class FileWriter {
+	deque<vector<uint64_t>> data;
+	atomic<bool> kill;
+	atomic<bool> terminated;
+	ofstream _file_;
+	mutex m;
+	condition_variable cv;
+	thread t;
 
-void FileWriter::write(const vector<uint64_t>& v) {
-	{
-		std::lock_guard<mutex> lock(m);
-		data.push_back(move(v));
-	}
-	cv.notify_all();
-}
+	void write_data();
+
+public:
+	FileWriter(const string& filename);
+	virtual ~FileWriter();
+
+	void write(const vector<uint64_t>& v);
+};
+
+#endif /* FILEWRITER_H_ */

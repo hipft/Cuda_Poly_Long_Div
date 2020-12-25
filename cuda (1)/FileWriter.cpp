@@ -32,15 +32,12 @@ FileWriter::FileWriter(const string& filename) {
 
 FileWriter::~FileWriter() {
 	kill.store(true);
-	cv.notify_all();
-	{
-		std::lock_guard<mutex> lock(m);
-		while (!data.empty()) {
-			for_each(data.front().begin(), data.front().end(), [&](const int& i){
-				_file_ << i << " ";
-			});
-			data.pop_front();
-		}
+	while (!terminated.load()) cv.notify_all(); // bc. notify signals can get lost
+	while (!data.empty()) {
+		for_each(data.front().begin(), data.front().end(), [&](const int& i){
+			_file_ << i << " ";
+		});
+		data.pop_front();
 	}
 	_file_.close();
 }
@@ -61,15 +58,13 @@ void FileWriter::write_data() {
 			_file_ << i << " ";
 		});
 		_file_.flush();
-		v.clear();
 	}
 	terminated.store(true);
 }
 
 void FileWriter::write(const vector<uint64_t>& v) {
-	{
-		std::lock_guard<mutex> lock(m);
-		data.push_back(move(v));
-	}
+	m.lock();
+	data.push_back(move(v));
+	m.unlock();
 	cv.notify_all();
 }
