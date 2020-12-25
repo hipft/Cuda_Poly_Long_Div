@@ -70,7 +70,7 @@ int main() {
 	assert(dc < 64);
 
 	// for t == 2
-#if 1
+#if 0
 	cout << "Running t=2" << endl;
 	constexpr int blockDim{1<<5}; // threads per block
 
@@ -103,7 +103,6 @@ int main() {
 	  while (iss >> v) S.push_back(v);
 	}
 	f.close();
-	cout << S.back() << endl;
 	cout << "number of t2 solutions: " << S.size() << endl;
 
 	// copy to GPU
