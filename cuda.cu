@@ -46,17 +46,17 @@
  bool test_all_two_bit_patterns(const uint64_t& C)
  // returns true if division by C leaves a nonzero remainder for all two bit error patters
  {
-	 bool B[da + dc + 1];
-	 bool A[da + 1 + dc];
+	 bool B[da + dc];
+	 bool A[da + dc];
  
-	 memset(A, 0, da + dc + 1);
-	 memset(B, 0, da + dc + 1);
+	 memset(A, 0, sizeof(A));
+	 memset(B, 0, sizeof(B));
  
-	 for (int i = 0; i <= da; i++) {
+	 for (int i = 0; i < da; i++) {
 		A[i] = 1;
-		for (int j = i + 1; j <= da; j++) {
+		for (int j = i + 1; j < da; j++) {
 			A[j] = 1;
-			for (int k = 0; k <= da; k++) B[dc + k] = A[k];
+			for (int k = 0; k < da; k++) B[dc + k] = A[k];
 			for (int k = 0; k < dc; k++) B[k] = 0;
 			if (!remainder_is_nonzero (da, B, dc, C)) return false;
 			#if __CUDA_ARCH__
@@ -74,19 +74,19 @@
  bool test_all_three_bit_patterns(const uint64_t& C)
  // returns true if division by C leaves a nonzero remainder for all two bit error patters
  {
-	 bool B[da + dc + 1];
-	 bool A[da + 1 + dc];
+	 bool B[da + dc];
+	 bool A[da + dc];
  
-	 memset(A, 0, da + dc + 1);
-	 memset(B, 0, da + dc + 1);
+	 memset(A, 0, sizeof(A));
+	 memset(B, 0, sizeof(B));
  
-	 for (int i1 = 0; i1 <= da; i1++) {
+	 for (int i1 = 0; i1 < da; i1++) {
 		A[i1] = 1;
-		for (int i2 = i1 + 1; i2 <= da; i2++) {
+		for (int i2 = i1 + 1; i2 < da; i2++) {
 			A[i2] = 1;
-			for (int i3 = i2 + 1; i3 <= da; i3++) {
+			for (int i3 = i2 + 1; i3 < da; i3++) {
 				A[i3] = 1;
-				for (int h = 0; h <= da; h++) B[dc + h] = A[h];
+				for (int h = 0; h < da; h++) B[dc + h] = A[h];
 				for (int h = 0; h < dc; h++) B[h] = 0;
 				if (!remainder_is_nonzero (da, B, dc, C)) return false;
 				#if __CUDA_ARCH__
