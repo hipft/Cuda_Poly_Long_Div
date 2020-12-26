@@ -65,7 +65,7 @@ void CRC_polynomial_cuda_t2_wrapper(params& p, FileWriter& fw, const int& n) {
 
 int main() {
 	uint64_t ns{0};
-	constexpr int da{256};
+	constexpr int da{128};
 	constexpr int dc{16};
 
 	assert(dc < 64);

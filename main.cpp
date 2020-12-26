@@ -246,6 +246,6 @@ std::vector<std::vector<int>> find_CRC_polynomials(int t, int da, int dc, int ve
 int main() {
 	int verbose_level = 1;
 
-	std::vector<std::vector<int>> S = find_CRC_polynomials(3, 64, 8, verbose_level);
+	std::vector<std::vector<int>> S = find_CRC_polynomials(2, 256, 16, verbose_level);
 	return 0;
 }

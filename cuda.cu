@@ -26,18 +26,14 @@
  int remainder_is_nonzero(const int& da, bool* A, const int& db, const uint64_t& B)
  // returns true if the remainder of A after division by B is nonzero
  {
-	 for (int i = da + db; i >= db; i--) {
-		const bool& ai = A[i];
-		if (ai) 
-			for (int j = db, k = i; j >= 0; j--, k--) {
+	 for (int i = da + db - 1; i >= db; i--)
+		if (A[i]) 
+			for (int j = db, k = i; j > -1; j--, k--)
 				A[k] = (A[k]^((B >> (db-j))&1));
-			}
-	 }
-	 for (int k = da + db; k >= 0; k--) {
-		 if (A[k]) {
-			 return true;
-		 }
-	 }
+
+	 for (int k = db - 1; k > -1; k--) 
+		if (A[k]) return true;
+
 	 return false;
  }
  
