@@ -37,7 +37,7 @@ public:
 template<int da, int dc>
 void CRC_polynomial_cuda_t2_wrapper(params& p, FileWriter& fw, const int& n) {
 	uint64_t grid_dim = (p.end-p.start)/p.block_dim + 1;
-	grid_dim = min(grid_dim, (uint64_t(1)<<31)-1);
+	grid_dim = min(grid_dim, ((uint64_t(1)<<31)-1)/std::thread::hardware_concurrency());
 	uint64_t total_threads = p.block_dim * grid_dim;
 	if (p.id==n-1) cout << "blocks: " << p.block_dim << ", grids: " << grid_dim << endl;
 	cudaStream_t stream;
@@ -58,21 +58,22 @@ void CRC_polynomial_cuda_t2_wrapper(params& p, FileWriter& fw, const int& n) {
 		fw.write(S);
 	}
 
+	delete[] rh;
 	cudaFree(r);
 	cudaStreamDestroy(stream);
 }
 
 int main() {
 	uint64_t ns{0};
-	constexpr int da{64};
-	constexpr int dc{8};
+	constexpr int da{256};
+	constexpr int dc{16};
 
 	assert(dc < 64);
 
 	// for t == 2
-#if 0
+#if 1
 	cout << "Running t=2" << endl;
-	constexpr int blockDim{1<<5}; // threads per block
+	constexpr int blockDim{1<<6}; // threads per block
 
 	FileWriter fw("output_cuda_t2");
 	size_t n = std::thread::hardware_concurrency();
