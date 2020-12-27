@@ -21,6 +21,7 @@ cuda: cuda_main.cpp \
 			cuda.cu \
 			FileWriter.cpp \
 			FileWriter.h \
+			CRC_polynomial_cuda_wrapper.h \
 			FileWriterTest.cpp \
 			makefile
 	$(CC) $(CC_FLAGS) -c ./FileWriter.cpp -o FileWriter.o $(CC_LIB)
@@ -33,6 +34,9 @@ cpu_main: cpu_main.cpp cuda.cu FileWriter.h FileWriter.cpp
 	nvcc -x cu -c $(CUDA_FLAGS) -rdc=true cpu_main.cpp -o cpu_main.o
 	nvcc $(CUDA_FLAGS) FileWriter.o cpu_main.o -o cpu $(CUDA_LIB) $(CC_LIB)
 	
+cuda_test: cuda cuda_test.cpp
+	nvcc -x cu -c $(CUDA_FLAGS) -rdc=true cuda_test.cpp -o cuda_test.o
+	nvcc $(CUDA_FLAGS) cuda_test.o -o cuda_test $(CUDA_LIB) $(CC_LIB) -lgtest -L/usr/lib
 
 FileWriter: FileWriter.cpp FileWriter.h FileWriterTest.cpp
 	$(CC) -std=c++14 -Wall -O3 -c ./FileWriter.cpp -o FileWriter.o

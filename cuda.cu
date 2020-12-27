@@ -22,18 +22,25 @@
 
  #include <cuda.h>
 
+#ifndef CRC_polynomial_cuda
+#define CRC_polynomial_cuda
+
  __device__ __host__
  int remainder_is_nonzero(const int& da, bool* A, const int& db, const uint64_t& B)
  // returns true if the remainder of A after division by B is nonzero
  {
-	 for (int i = da + db - 1; i >= db; i--)
-		if (A[i]) 
-			for (int j = db, k = i; j > -1; j--, k--)
+	 for (int i = da + db - 1; i >= db; i--) {
+		const bool& ai = A[i];
+		if (ai) 
+			for (int j = db, k = i; j > -1; j--, k--) {
 				A[k] = (A[k]^((B >> (db-j))&1));
-
-	 for (int k = db - 1; k > -1; k--) 
-		if (A[k]) return true;
-
+			}
+	 }
+	 for (int k = db - 1; k > -1; k--) {
+		 if (A[k]) {
+			 return true;
+		 }
+	 }
 	 return false;
  }
  
@@ -108,7 +115,7 @@
  
 	 if (!(C&1)) return;
 	 if (C >= e) return;
-	 if (C > (uint64_t(1)<<(dc+1))-1) return;
+	 if (C > (1ul<<(dc+1))-1) return;
  
 	 ret = test_all_two_bit_patterns<da, dc>(C);
 	 res[thread_id] = ret;
@@ -121,3 +128,5 @@
 	 if (thread_id > size) return;
 	 res[thread_id] = test_all_three_bit_patterns<da, dc>(data[thread_id]);
  }
+
+ #endif
