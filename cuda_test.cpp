@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 using std::string;
+using std::move;
 
 vector<uint64_t> read_file(const string& s) {
     std::vector<uint64_t> S;
@@ -45,6 +46,21 @@ TEST(find_CRC_polynomials, 2_128_16) {
     ASSERT_TRUE(S == O);
 }
 
+TEST(find_CRC_polynomials, 2_256_12) {
+	std::vector<uint64_t> S = read_file("./test_files/output_cuda_t_2_da_256_dc_12");
+    std::vector<uint64_t> O = CRC_polynomial_cuda_t2_wrapper<256,12>();
+    std::sort(S.begin(), S.end());
+    std::sort(O.begin(), O.end());
+    ASSERT_TRUE(S == O);
+}
+
+TEST(find_CRC_polynomials, 2_256_16) {
+	std::vector<uint64_t> S = read_file("./test_files/output_cuda_t_2_da_256_dc_16");
+    std::vector<uint64_t> O = CRC_polynomial_cuda_t2_wrapper<256,16>();
+    std::sort(S.begin(), S.end());
+    std::sort(O.begin(), O.end());
+    ASSERT_TRUE(S == O);
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

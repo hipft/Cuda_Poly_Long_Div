@@ -25,7 +25,7 @@ public:
 template<int da, int dc>
 void CRC_polynomial_cuda_t2_wrapper_thread(params& p, const size_t n) {
     uint64_t grid_dim = (p.end-p.start)/p.block_dim + 1;
-    grid_dim = min(grid_dim, ((1ul<<31)-1)/n);
+    grid_dim = min(grid_dim, 1ul<<13);
     uint64_t total_threads = p.block_dim * grid_dim;
 
     cudaStream_t stream;

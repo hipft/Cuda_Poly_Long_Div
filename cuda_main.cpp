@@ -33,10 +33,10 @@ using std::min;
 
 
 int main() {
-	constexpr int da{128};
+	constexpr int da{256};
 	constexpr int dc{16};
 
-	assert(dc < 64);
+	assert(dc < 63);
 
 	// for t == 2
 #if 1
