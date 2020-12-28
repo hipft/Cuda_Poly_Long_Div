@@ -25,8 +25,13 @@ public:
 template<int da, int dc>
 void CRC_polynomial_cuda_t2_wrapper_thread(params& p, const size_t n) {
     uint64_t grid_dim = (p.end-p.start)/p.block_dim + 1;
-    grid_dim = min(grid_dim, 1ul<<13);
+    grid_dim = min(grid_dim, (1ul<<31)/n/(da+dc));
     uint64_t total_threads = p.block_dim * grid_dim;
+
+    cout << "Started thread: " << p.id << endl;
+
+    if (p.id+1==n) 
+        cout << "(blockDim, gridDim): (" << p.block_dim << ", " << grid_dim << ")" << endl;
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -35,8 +40,9 @@ void CRC_polynomial_cuda_t2_wrapper_thread(params& p, const size_t n) {
 
     for (uint64_t k=p.start; k<p.end; k+=total_threads) {
         CRC_polynomial_cuda_t2<da,dc><<<grid_dim,p.block_dim,0,stream>>>(k,p.end,r);
-        cudaDeviceSynchronize();
-        cudaMemcpy(rh, r, total_threads, cudaMemcpyDeviceToHost);
+//        cudaDeviceSynchronize();
+        cudaMemcpyAsync(rh, r, total_threads, cudaMemcpyDeviceToHost, stream);
+        cudaStreamSynchronize(stream);
 
         for (uint64_t j{0}; j<total_threads; ++j) {
             if (rh[j]) p.solutions.push_back(k+j);
@@ -46,15 +52,17 @@ void CRC_polynomial_cuda_t2_wrapper_thread(params& p, const size_t n) {
     delete[] rh;
     cudaFree(r);
     cudaStreamDestroy(stream);
+    cout << "terminated thread: " << p.id << endl;
 }
 
 template<int da, int dc>
 vector<uint64_t> CRC_polynomial_cuda_t2_wrapper() {
 	assert(dc < 64);
-	constexpr int blockDim{1<<6}; // threads per block
+	constexpr int blockDim{1<<7}; // threads per block
 
 	const size_t n = std::thread::hardware_concurrency();
-	vector<thread> threads(n);
+	cout << "Allocating resources for: " << n << " threads." << endl;
+        vector<thread> threads(n);
 	vector<params> p(n);
 
 	for (size_t i{0}, d{(1ul<<(dc+1))/n}; i<n; ++i) {

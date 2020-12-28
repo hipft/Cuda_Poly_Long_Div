@@ -16,7 +16,7 @@ public:
 };
 
 template<int t, int da, int dc>
-void search_for_CRC_polynomial_cpu(params& p, FileWriter& fw) {
+void search_for_CRC_polynomial_cpu(params& p) {
 	if (t<2) return;
 	for (size_t i=p.start; i<p.end; ++i) {
 		if (!(i&1)) continue;
@@ -33,7 +33,7 @@ int main() {
 
 	constexpr int t{2};
 	constexpr int da{256};
-	constexpr int dc{16};
+	constexpr int dc{24};
 
 	FileWriter fw("output_cpu");
 

@@ -34,7 +34,7 @@ using std::min;
 
 int main() {
 	constexpr int da{256};
-	constexpr int dc{16};
+	constexpr int dc{24};
 
 	assert(dc < 63);
 
