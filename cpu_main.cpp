@@ -16,7 +16,7 @@ public:
 };
 
 template<int t, int da, int dc>
-void search_for_CRC_polynomial_cpu(params& p) {
+void search_for_CRC_polynomial_cpu(params& p, FileWriter& fw) {
 	if (t<2) return;
 	for (size_t i=p.start; i<p.end; ++i) {
 		if (!(i&1)) continue;
