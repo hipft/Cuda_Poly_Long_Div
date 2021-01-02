@@ -18,8 +18,8 @@ public:
 template<int t, int da, int dc>
 void search_for_CRC_polynomial_cpu(params& p, FileWriter& fw) {
 	if (t<2) return;
-	for (size_t i=p.start; i<p.end; ++i) {
-		if (!(i&1)) continue;
+	p.start += !(p.start&1ul);
+	for (size_t i=p.start; i<p.end; ++++i) {
 		if (i > (uint64_t(1)<<(dc+1))-1) break;
 		bool ret = test_all_two_bit_patterns<da, dc>(i);
 		if (ret && t >= 3) ret = test_all_three_bit_patterns<da, dc>(i);
@@ -33,7 +33,7 @@ int main() {
 
 	constexpr int t{2};
 	constexpr int da{256};
-	constexpr int dc{24};
+	constexpr int dc{12};
 
 	FileWriter fw("output_cpu");
 
